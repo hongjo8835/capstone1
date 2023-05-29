@@ -1,20 +1,16 @@
 import os
 import urllib.request
-from datetime import datetime
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
-# from argon2 import PasswordHasher
-from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils import json
-from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -33,19 +29,11 @@ def barnum_return(request):
     client_secret = os.getenv("API_KEY")
     url = "http://openapi.foodsafetykorea.go.kr/api/" + client_secret + "/C005/json/1/1/BAR_CD=" + barnum
     api_request = urllib.request.Request(url)
-    # api_request.add_header("api_secret", client_secret)
-    # api_request.add_header("barnum", barnum)
     response = urllib.request.urlopen(api_request)
     rescode = response.getcode()
     if (rescode == 200):
         response_body = response.read()
         result = json.loads(response_body.decode("utf-8"))
-        # items = result.get('items')
-        #
-        # context = {
-        #     'items': items
-        # }
-        # decode_data = result
         return JsonResponse(result, safe=False)
     else:
         context = {"api": "fail"}
@@ -63,8 +51,7 @@ def user_join(request):
         user = serializer.save()
         user.set_password(password)
         user.save()
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -85,20 +72,40 @@ def login(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_foodlist_info(request):
-    authentication = JWTAuthentication()
-    user, _ = authentication.authenticate(request)
+    user = request.user
 
     if user is None:
         return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
         food_data = FoodList.objects.filter(user_id=user.id)
         serializer = FoodListSerializer(food_data, many=True)
-        # user_data = User.objects.get(userid=user.userid)
-        # serializer = UserSerializer(user_data)
         return JsonResponse(serializer.data, safe=False)
     except FoodList.DoesNotExist:
         context = {"foodlist": "does not exist"}
         return JsonResponse(context)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def put_ingredient(request):
+    user = request.user
+
+    if user is None:
+        return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        food_data = request.data.get('foodlist', [])
+        serializer = FoodListSerializer(data=food_data, many=True)
+        if serializer.is_valid():
+            # DB에 저장
+            food_list = serializer.save(user=user)
+            saved_food_data = FoodListSerializer(food_list, many=True).data
+            return JsonResponse(saved_food_data, safe=False, status=status.HTTP_201_CREATED)
+        else:
+            # 실패한 경우, 오류 메시지를 반환합니다.
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except FoodList.DoesNotExist:
+        context = {"foodlist": "does not exist"}
+        return JsonResponse(context)
 
