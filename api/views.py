@@ -47,7 +47,7 @@ def user_join(request):
     password = request.data.get('password')
     serializer = UserSerializer(data=request.data)
 
-    if serializer.is_valid(raise_exception=False):
+    if serializer.is_valid(raise_exception=True):
         user = serializer.save()
         user.set_password(password)
         user.save()
