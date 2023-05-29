@@ -58,6 +58,22 @@ def user_join(request):
         return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def check_id(request):
+    userid = request.data.get('userid')
+    if userid:
+        user = User.objects.filter(userid=userid)
+        if user.exists():
+            result = {
+                "status": "fail"
+            }
+        else:
+            result = {
+                "status": "success"
+            }
+    return JsonResponse(result)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
