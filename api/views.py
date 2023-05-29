@@ -52,6 +52,8 @@ def user_join(request):
         user.set_password(password)
         user.save()
         return Response(status=status.HTTP_201_CREATED)
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])

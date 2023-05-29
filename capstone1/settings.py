@@ -14,10 +14,10 @@ from pathlib import Path
 from .db_config import DATABASES
 from .SECRET_config import SECRET_KEY
 from datetime import timedelta
+from django import db
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -125,8 +125,8 @@ AUTH_USER_MODEL = 'api.User'
 
 SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=3),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=3),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 }
