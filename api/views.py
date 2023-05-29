@@ -47,13 +47,15 @@ def user_join(request):
     password = request.data.get('password')
     serializer = UserSerializer(data=request.data)
 
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid(raise_exception=False):
         user = serializer.save()
         user.set_password(password)
         user.save()
-        return Response(status=status.HTTP_201_CREATED)
+        context = {"status": "success"}
+        return Response(context, status=status.HTTP_201_CREATED)
     else:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        context = {"status": "fail"}
+        return Response(context, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
