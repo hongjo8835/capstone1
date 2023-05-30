@@ -6,13 +6,11 @@ from django.contrib.auth.models import update_last_login
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils import json
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import BoardSerializer, UserSerializer, FoodListSerializer
@@ -23,7 +21,8 @@ from .models import Board, User, FoodList
 
 
 @csrf_exempt
-@require_POST
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def barnum_return(request):
     received_data = json.loads(request.body)
     barnum = received_data.get('barnum', "")
@@ -204,3 +203,72 @@ def create_post(request):
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_post(request, board_id):
+    user = request.user
+
+    if user is None:
+        return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+    try:
+        # 전달된 post_id에 해당하는 게시글을 가져옵니다.
+        board = Board.objects.get(pk=board_id, user=user)
+
+        # 요청 데이터로 게시글을 업데이트합니다.
+        serializer = BoardSerializer(board, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    except Board.DoesNotExist:
+        return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_posts(request):
+    # 데이터베이스에서 모든 게시글 가져오기
+    posts = Board.objects.all()
+    # 게시글 시리얼라이징
+    serializer = BoardSerializer(posts, many=True)
+    # JSON 응답 반환
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_post(request, board_id):
+    try:
+        # 데이터베이스에서 지정된 게시글 가져오기
+        post = Board.objects.get(pk=board_id)
+
+        # 게시글 시리얼라이징
+        serializer = BoardSerializer(post)
+
+        # JSON 응답 반환
+        return JsonResponse(serializer.data)
+
+    except Board.DoesNotExist:
+        return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_post(request, board_id):
+    try:
+        # 데이터베이스에서 지정된 게시글 가져오기
+        board = Board.objects.get(pk=board_id)
+
+        # 게시글 작성자와 요청 사용자가 일치하는 경우 게시글을 삭제합니다.
+        if board.user == request.user:
+            board.delete()
+            return JsonResponse({'message': '게시글이 정상적으로 삭제되었습니다.'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return JsonResponse({'message': '다른 사용자의 게시글은 삭제할 수 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+
+    except Board.DoesNotExist:
+        return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
