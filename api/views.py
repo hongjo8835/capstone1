@@ -182,3 +182,25 @@ def update_ingredient(request):
         return JsonResponse(serializer.data, status=status.HTTP_200_OK)
     else:
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_post(request):
+    user = request.user
+
+    if user is None:
+        return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        board_data = request.data
+        serializer = BoardSerializer(data=board_data)
+        if serializer.is_valid():
+            # DB에 저장
+            post = serializer.save(user=user)
+            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # 실패한 경우, 오류 메시지를 반환합니다.
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -10,5 +10,6 @@ urlpatterns = [
     path("putingredient/", views.put_ingredient),
     path("checkid/", views.check_id),
     path("delingredients/", views.delete_ingredients),
-    path("update_ingredient/", views.update_ingredient)
+    path("update_ingredient/", views.update_ingredient),
+    path("create_post/", views.create_post)
 ]

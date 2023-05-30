@@ -73,14 +73,15 @@ class Board(models.Model):
 class FoodList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, default='')
     name = models.CharField(max_length=50, null=False, default='')
-    data = models.CharField(max_length=200, null=False, default='')
+    memo = models.CharField(max_length=200, null=False, default='')
+    count = models.IntegerField()
+    date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = 'foodlist'
 
 
 class Comment(models.Model):
-
     board = models.ForeignKey(Board, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, default='')
     content = models.TextField(null=False, default='')
