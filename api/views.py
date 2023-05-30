@@ -3,6 +3,7 @@ import urllib.request
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -74,6 +75,8 @@ def check_id(request):
                 "status": "success"
             }
     return JsonResponse(result)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login(request):
@@ -129,3 +132,53 @@ def put_ingredient(request):
         context = {"foodlist": "does not exist"}
         return JsonResponse(context)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_ingredients(request):
+    user = request.user
+    ingredient_ids = request.data.get('ingredient_ids', [])
+
+    if isinstance(ingredient_ids, int):
+        ingredient_ids = [ingredient_ids]
+
+    valid_ingredients = FoodList.objects.filter(id__in=ingredient_ids, user=user)
+
+    if not valid_ingredients.exists():
+        return Response({"message": "Failed to delete ingredients. No matching items found."},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    deleted_ingredient_ids = [ingredient.id for ingredient in valid_ingredients]
+    deleted_count = valid_ingredients.delete()
+
+    if deleted_count[0] > 0:
+        return Response(
+            {"message": f"{deleted_count[0]} ingredients deleted.", "deleted_ingredient_ids": deleted_ingredient_ids},
+            status=status.HTTP_200_OK)
+    else:
+        return Response({"message": "Failed to delete ingredients."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_ingredient(request):
+    user = request.user
+    data = request.data
+    ingredient_id = data.get('id')
+
+    # ID 값 확인
+    if not ingredient_id:
+        return JsonResponse({"message": "Ingredient ID is missing."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        ingredient = FoodList.objects.get(pk=ingredient_id, user=user)
+    except ObjectDoesNotExist:
+        return JsonResponse({"message": "Ingredient not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = FoodListSerializer(ingredient, data=data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
