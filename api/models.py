@@ -85,6 +85,7 @@ class Comment(models.Model):
     board = models.ForeignKey(Board, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, default='')
     content = models.TextField(null=False, default='')
+    parent_comment = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
 
     class Meta:
         db_table = 'comment'
