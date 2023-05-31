@@ -13,8 +13,8 @@ from rest_framework.response import Response
 from rest_framework.utils import json
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import BoardSerializer, UserSerializer, FoodListSerializer
-from .models import Board, User, FoodList
+from .serializers import BoardSerializer, UserSerializer, FoodListSerializer, CommentSerializer
+from .models import Board, User, FoodList, Comment
 
 
 # Create your views here.
@@ -272,3 +272,53 @@ def delete_post(request, board_id):
 
     except Board.DoesNotExist:
         return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_comment(request, board_id):
+    board = Board.objects.get(pk=board_id)
+    data = request.data.copy()
+    data['board'] = board.id
+    data['user'] = request.user.id
+    serializer = CommentSerializer(data=data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+    else:
+        return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_comment(request, comment_id):
+    comment = Comment.objects.get(id=comment_id)
+    # 작성자와 로그인 사용자가 동일하지 않으면 삭제 거부
+    if comment.user != request.user:
+        return Response({"message": "You can only delete your own comment."}, status=403)
+
+    comment.delete()
+    return Response({"message": "Comment deleted successfully"}, status=204)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_comment(request, board_id, comment_id):
+    board = Board.objects.get(pk=board_id)
+    comment = Comment.objects.get(pk=comment_id)
+
+    if request.user.id != comment.user.id:
+        return Response({'message': '권한이 없습니다.'}, status=403)
+
+    data = request.data.copy()
+    data['board'] = board.id
+    data['user'] = request.user.id
+
+    serializer = CommentSerializer(comment, data=data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+    else:
+        return Response(serializer.errors, status=400)

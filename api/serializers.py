@@ -15,19 +15,28 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['userid', 'username', 'password', 'email']
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    replies = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
+    def get_replies(self, comment):
+        if comment.parent_comment is None:
+            return CommentSerializer(comment.replies.all(), many=True).data
+        return None
+
+
 class BoardSerializer(serializers.ModelSerializer):
+    comment = CommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Board
-        fields = '__all__'
+        fields = ['title', 'user', 'content', 'date', 'comment']
 
 
 class FoodListSerializer(serializers.ModelSerializer):
     class Meta:
         model = FoodList
-        fields = '__all__'
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
         fields = '__all__'
