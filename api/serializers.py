@@ -29,11 +29,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    comment = CommentSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Board
-        fields = ['title', 'user', 'content', 'date', 'comment']
+        fields = ['title', 'user', 'content', 'date', 'comments']
 
 
 class FoodListSerializer(serializers.ModelSerializer):
