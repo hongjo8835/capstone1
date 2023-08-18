@@ -122,7 +122,7 @@ def put_ingredient(request):
         if serializer.is_valid():
             # DB에 저장
             food_list = serializer.save(user=user)
-            saved_food_data = FoodListSerializer(food_list, many=True).data
+             saved_food_data = {"foodlist":FoodListSerializer(food_list, many=True).data}
             return JsonResponse(saved_food_data, safe=False, status=status.HTTP_201_CREATED)
         else:
             # 실패한 경우, 오류 메시지를 반환합니다.
