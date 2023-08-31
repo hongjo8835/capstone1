@@ -5,6 +5,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import permission_classes, api_view
@@ -14,7 +16,7 @@ from rest_framework.utils import json
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import BoardSerializer, UserSerializer, FoodListSerializer, CommentSerializer
-from .models import Board, User, FoodList, Comment
+from .models import Board, User, FoodList, Comment, BarcodeData
 
 
 # Create your views here.
@@ -26,18 +28,31 @@ from .models import Board, User, FoodList, Comment
 def barnum_return(request):
     received_data = json.loads(request.body)
     barnum = received_data.get('barnum', "")
-    client_secret = os.getenv("API_KEY")
-    url = "http://openapi.foodsafetykorea.go.kr/api/" + client_secret + "/C005/json/1/1/BAR_CD=" + barnum
-    api_request = urllib.request.Request(url)
-    response = urllib.request.urlopen(api_request)
-    rescode = response.getcode()
-    if (rescode == 200):
-        response_body = response.read()
-        result = json.loads(response_body.decode("utf-8"))
-        return JsonResponse(result, safe=False)
-    else:
-        context = {"api": "fail"}
-        return JsonResponse(context)
+
+    try:
+        barcode_data = BarcodeData.objects.get(barnum=barnum)
+        if timezone.now() - barcode_data.created_at > timedelta(minutes=5):
+            raise BarcodeData.DoesNotExist
+
+        result = barcode_data.data
+    except BarcodeData.DoesNotExist:
+        client_secret = os.getenv("API_KEY")
+        url = "http://openapi.foodsafetykorea.go.kr/api/" + client_secret + "/C005/json/1/1/BAR_CD=" + barnum
+        api_request = urllib.request.Request(url)
+        response = urllib.request.urlopen(api_request)
+        res_code = response.getcode()
+
+        if res_code == 200:
+            response_body = response.read()
+            result = json.loads(response_body.decode("utf-8"))
+            BarcodeData.objects.update_or_create(barnum=barnum, defaults={'data': result})
+            return JsonResponse(result, safe=False)
+
+        else:
+            context = {"api": "fail"}
+            return JsonResponse(context)
+
+    return JsonResponse(result, safe=False)
 
 
 @csrf_exempt
@@ -123,7 +138,8 @@ def put_ingredient(request):
             # DB에 저장
             food_list = serializer.save(user=user)
             saved_food_data = {"foodlist":FoodListSerializer(food_list, many=True).data}
-            return JsonResponse(saved_food_data, status=status.HTTP_201_CREATED)
+            return JsonResponse(saved_food_data, safe=False, status=status.HTTP_201_CREATED)
+
         else:
             # 실패한 경우, 오류 메시지를 반환합니다.
             return JsonResponse(serializer.errors,safe=False, status=status.HTTP_400_BAD_REQUEST)
@@ -254,6 +270,7 @@ def get_post(request, board_id):
 
     except Board.DoesNotExist:
         return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
 
 
 @api_view(['POST'])
