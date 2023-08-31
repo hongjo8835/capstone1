@@ -271,6 +271,7 @@ def get_post(request, board_id):
         return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def delete_post(request, board_id):
