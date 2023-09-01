@@ -89,3 +89,9 @@ class Comment(models.Model):
 
     class Meta:
         db_table = 'comment'
+
+
+class BarcodeData(models.Model):
+    barnum = models.CharField(max_length=255, unique=True)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
