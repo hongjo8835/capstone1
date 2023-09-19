@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Board, FoodList, Comment
+from .models import Board, FoodList, Comment, User
 from django.contrib.auth import get_user_model
 
 
@@ -13,6 +13,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['userid', 'username', 'password', 'email']
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            userid=validated_data['userid']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class CommentSerializer(serializers.ModelSerializer):
