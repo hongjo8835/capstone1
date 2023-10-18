@@ -43,7 +43,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['title', 'user', 'content', 'date', 'comments']
+        fields = ['id', 'title', 'user', 'content', 'date', 'comments']
 
 
 class FoodListSerializer(serializers.ModelSerializer):
