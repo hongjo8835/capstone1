@@ -75,7 +75,7 @@ class FoodList(models.Model):
     name = models.CharField(max_length=50, null=False, default='')
     memo = models.CharField(max_length=200, null=False, default='')
     count = models.IntegerField(null=False, default='0')
-    date = models.DateTimeField(blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
 
     class Meta:
         db_table = 'foodlist'
