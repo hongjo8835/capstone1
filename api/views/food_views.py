@@ -253,12 +253,8 @@ def get_recipe_detail(request, recipe_name):
     # URL 디코딩
     recipe_name_decoded = urllib.parse.unquote(recipe_name)
 
-    # 레시피 이름에서 공백 제거
-    recipe_name_no_space = recipe_name_decoded.replace(" ", "")
-
-    # 레시피 이름으로 데이터를 찾습니다.
-    df_no_space['RCP_NM_no_space'] = df_no_space['RCP_NM'].str.replace(" ", "")
-    matching_recipe_data = df_no_space[df_no_space['RCP_NM_no_space'] == recipe_name_no_space]
+   # 레시피 이름으로 데이터를 찾습니다.
+    matching_recipe_data = df_no_space[df_no_space['RCP_NM'] == recipe_name_decoded]
 
     # 일치하는 레시피가 없는 경우
     if len(matching_recipe_data) == 0:
