@@ -2,7 +2,8 @@ import os
 import urllib.request
 from datetime import timedelta
 import pickle
-import urllib.parsefrom sklearn.feature_extraction.text import TfidfVectorizer
+import urllib.parse
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 from datetime import timedelta
