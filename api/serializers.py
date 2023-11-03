@@ -40,6 +40,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
+    date = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')  # 날짜 필드 재정의
 
     class Meta:
         model = Board
