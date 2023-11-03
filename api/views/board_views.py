@@ -92,12 +92,13 @@ def delete_post(request, board_id):
         # 게시글 작성자와 요청 사용자가 일치하는 경우 게시글을 삭제합니다.
         if board.user == request.user:
             board.delete()
-            return JsonResponse({'message': '게시글이 정상적으로 삭제되었습니다.'}, status=status.HTTP_204_NO_CONTENT)
+            return JsonResponse({'message': '게시글이 정상적으로 삭제되었습니다.'}, status=status.HTTP_200_OK)
         else:
             return JsonResponse({'message': '다른 사용자의 게시글은 삭제할 수 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
 
     except Board.DoesNotExist:
         return Response({"message": "게시물이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -110,9 +111,9 @@ def create_comment(request, board_id):
 
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=201)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     else:
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -121,10 +122,10 @@ def delete_comment(request, comment_id):
     comment = Comment.objects.get(id=comment_id)
     # 작성자와 로그인 사용자가 동일하지 않으면 삭제 거부
     if comment.user != request.user:
-        return Response({"message": "You can only delete your own comment."}, status=403)
+        return Response({"message": "다른 사용자의 게시글은 삭제할 수 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
     comment.delete()
-    return Response({"message": "Comment deleted successfully"}, status=204)
+    return Response({"message": "게시글이 정상적으로 삭제되었습니다."}, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -134,7 +135,7 @@ def update_comment(request, board_id, comment_id):
     comment = Comment.objects.get(pk=comment_id)
 
     if request.user.id != comment.user.id:
-        return Response({'message': '권한이 없습니다.'}, status=403)
+        return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
 
     data = request.data.copy()
     data['board'] = board.id
@@ -144,6 +145,6 @@ def update_comment(request, board_id, comment_id):
 
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data, status=200)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
-        return Response(serializer.errors, status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

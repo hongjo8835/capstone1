@@ -40,10 +40,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
+    date = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
 
     class Meta:
         model = Board
-        fields = ['title', 'user', 'content', 'date', 'comments']
+        fields = ['id', 'title', 'user', 'content', 'date', 'comments']
 
 
 class FoodListSerializer(serializers.ModelSerializer):
