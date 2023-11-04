@@ -1,6 +1,7 @@
 import os
+import re
 import urllib.request
-from datetime import timedelta
+from datetime import timedelta, datetime
 import pickle
 import urllib.parse
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -20,6 +21,7 @@ from rest_framework.utils import json
 
 from api.models import BarcodeData, FoodList
 from api.serializers import FoodListSerializer
+from dateutil.relativedelta import relativedelta
 
 
 @csrf_exempt
@@ -82,6 +84,28 @@ def put_ingredient(request):
         return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
         food_data = request.data.get('foodlist', [])
+        for food in food_data:
+            expiration_info = food.get('expiration_info')
+            if expiration_info:  # 유통기한 정보가 있는 경우에만
+                matches = re.findall(r'(\d+)(년|개월|주|일)', expiration_info)
+                if matches:
+                    expiration_date = datetime.strptime(food.get('manufacture_date'), '%Y-%m-%d').date()
+                    for match in matches:
+                        quantity = int(match[0])
+                        unit = match[1]
+
+                        # 유통기한 계산
+                        if unit == '년':
+                            expiration_date += relativedelta(years=quantity)
+                        elif unit == '개월':
+                            expiration_date += relativedelta(months=quantity)
+                        elif unit == '주':
+                            expiration_date += relativedelta(weeks=quantity)
+                        elif unit == '일':
+                            expiration_date += relativedelta(days=quantity)
+
+                    # 유통기한 추가
+                    food['expiration_date'] = expiration_date
         serializer = FoodListSerializer(data=food_data, many=True)
         if serializer.is_valid():
             # DB에 저장

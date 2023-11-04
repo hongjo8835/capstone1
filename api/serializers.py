@@ -51,3 +51,6 @@ class FoodListSerializer(serializers.ModelSerializer):
     class Meta:
         model = FoodList
         fields = '__all__'
+        extra_kwargs = {
+            'expiration_info': {'write_only': True},  # 클라이언트에서 받지만 DB에 저장하지 않음
+        }
