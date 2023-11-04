@@ -45,6 +45,9 @@ def barnum_return(request):
         if res_code == 200:
             response_body = response.read()
             result = json.loads(response_body.decode("utf-8"))
+            # API 결과로부터 필요한 바코드 정보가 있는지 확인
+            if 'C005' not in result or 'row' not in result['C005'] or not result['C005']['row']:
+                return JsonResponse({"message": "바코드 정보를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
             BarcodeData.objects.update_or_create(barnum=barnum, defaults={'data': result})
             return JsonResponse(result, safe=False)
 
