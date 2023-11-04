@@ -67,7 +67,7 @@ def get_foodlist_info(request):
     if user is None:
         return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
-        food_data = FoodList.objects.filter(user_id=user.id).order_by('date')
+        food_data = FoodList.objects.filter(user_id=user.id).order_by('expiration_date')
         serializer = FoodListSerializer(food_data, many=True)
         return JsonResponse(serializer.data, safe=False)
     except FoodList.DoesNotExist:

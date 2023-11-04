@@ -77,7 +77,6 @@ class FoodList(models.Model):
     count = models.IntegerField(null=False, default='0')
     manufacture_date = models.DateField(null=True, blank=True)  # 제조일자
     expiration_date = models.DateField(null=True, blank=True)  # 유통기한
-    date = models.DateField(null=True, blank=True)
 
     class Meta:
         db_table = 'foodlist'
