@@ -273,7 +273,7 @@ def get_recipe_detail(request, recipe_name):
         return Response({'message': '인증되지 않은 사용자입니다.'}, status=status.HTTP_401_UNAUTHORIZED)
     
     # CSV 파일 경로
-    df_no_space_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', '레시피 데이터_공백제거.csv')  
+    df_no_space_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', 'recipe_data.csv')  
 
     df_no_space = pd.read_csv(df_no_space_filepath , encoding='utf-8')
 
