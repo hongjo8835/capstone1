@@ -85,11 +85,12 @@ def put_ingredient(request):
     try:
         food_data = request.data.get('foodlist', [])
         for food in food_data:
+            manufacture_date = datetime.strptime(food.get('manufacture_date'), '%Y-%m-%d').date()
             expiration_info = food.get('expiration_info')
             if expiration_info:  # 유통기한 정보가 있는 경우에만
                 matches = re.findall(r'(\d+)(년|개월|주|일)', expiration_info)
                 if matches:
-                    expiration_date = datetime.strptime(food.get('manufacture_date'), '%Y-%m-%d').date()
+                    expiration_date = manufacture_date
                     for match in matches:
                         quantity = int(match[0])
                         unit = match[1]
@@ -103,9 +104,11 @@ def put_ingredient(request):
                             expiration_date += relativedelta(weeks=quantity)
                         elif unit == '일':
                             expiration_date += relativedelta(days=quantity)
+            else: # 만약 유통기한 정보가 없다면, 제조일을 유통기한으로 사용
+                expiration_date = manufacture_date
 
-                    # 유통기한 추가
-                    food['expiration_date'] = expiration_date
+            # 유통기한 추가
+            food['expiration_date'] = expiration_date
         serializer = FoodListSerializer(data=food_data, many=True)
         if serializer.is_valid():
             # DB에 저장
