@@ -177,11 +177,11 @@ def recipe_recommendation(request):
     # 사용자 입력에 대한 클러스터 라벨 예측
     predicted_cluster = loaded_model.predict(user_input_vector)
 
-    df_no_space_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', '레시피 데이터_공백제거.csv')  # 적절한 파일 경로 설정하기
+    df_no_space_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', 'recipe_data.csv')  # 적절한 파일 경로 설정하기
 
     df_no_space= pd.read_csv(df_no_space_filepath , encoding='utf-8')
 
-    df_cleaned_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', 'cleaned_레시피 데이터.csv')  # 적절한 파일 경로 설정하기
+    df_cleaned_filepath = os.path.join(os.path.dirname(__file__), '..', '..','recipe_file', 'cleaned_recipe_data.csv')  # 적절한 파일 경로 설정하기
 
     df_cleaned= pd.read_csv(df_cleaned_filepath , encoding='utf-8')
 
@@ -253,6 +253,7 @@ def get_recipe_detail(request, recipe_name):
     # URL 디코딩
     recipe_name_decoded = urllib.parse.unquote(recipe_name)
 
+
    # 레시피 이름으로 데이터를 찾습니다.
     matching_recipe_data = df_no_space[df_no_space['RCP_NM'] == recipe_name_decoded]
 
@@ -268,4 +269,10 @@ def get_recipe_detail(request, recipe_name):
     recipe_detail.pop('RCP_SEQ', None)
     recipe_detail.pop('RCP_NM_no_space', None)
 
-    return JsonResponse(recipe_detail)    
+    # 모든 필드에 대해 null 값 대체
+    for key in recipe_detail.keys():
+        if recipe_detail[key] is None or pd.isnull(recipe_detail[key]):
+            
+             recipe_detail[key] = '정보 없음'
+
+    return JsonResponse(recipe_detail)     
