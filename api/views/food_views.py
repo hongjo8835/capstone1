@@ -256,7 +256,7 @@ def recipe_recommendation(request):
     recipe_scores.sort(key=lambda x: x[1], reverse=True)
 
     recommended_recipes=[]
-    for rcp_nm, score in recipe_scores[:5]:
+    for rcp_nm, score in recipe_scores[:10]:
         matching_recipe_in_no_space_df = df_no_space[df_no_space['RCP_NM'] == rcp_nm]
         if len(matching_recipe_in_no_space_df) > 0:
             image_link = matching_recipe_in_no_space_df.iloc[0]['ATT_FILE_NO_MK']
