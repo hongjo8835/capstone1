@@ -23,6 +23,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from capstone1.views import CustomTokenRefreshView
+
 # router = routers.SimpleRouter()
 # router.register('boards', views.BoardViewset)
 
@@ -32,5 +34,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-auth/", include('rest_framework.urls')),
     path("api/token/", TokenObtainPairView.as_view()),
-    path("api/token/refresh/", TokenRefreshView.as_view()),
+    path("api/token/refresh/", CustomTokenRefreshView.as_view()),
 ]
