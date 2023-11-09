@@ -23,7 +23,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from capstone1.views import CustomTokenRefreshView
+
 
 # router = routers.SimpleRouter()
 # router.register('boards', views.BoardViewset)
