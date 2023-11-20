@@ -231,25 +231,23 @@ def recipe_recommendation(request):
     cluster_recipes = df_cleaned[df_cleaned['cluster_label'] == predicted_cluster[0]]
 
     recipe_scores = []
+    user_tokens = user_input.split(',')
+    max_weight = len(user_tokens)  # 최대 가중치를 사용자가 선택한 음식의 개수로 설정
     for _, recipe_row in cluster_recipes.iterrows():
         recipe_vector = vectorizer.transform([recipe_row['rcp_parts_dtls_cleaned']])
-
         user_input_vector_adjusted = user_input_vector.copy()
         recipe_vector_adjusted = recipe_vector.copy()
-
-        user_tokens = user_input.split(',')
         for token in user_tokens:
             token_index = vectorizer.vocabulary_.get(token.strip())
             if token_index is not None:
-                user_input_vector_adjusted[0, token_index] *= 2
-
+                user_input_vector_adjusted[0, token_index] *= max_weight
+                max_weight = max(1, max_weight - 1)  # 가중치를 1씩 감소시키되, 최소값은 1로 설정
         score= cosine_similarity(user_input_vector_adjusted ,recipe_vector_adjusted )[0][0]
         matching_recipe_in_no_space_df= df_no_space[df_no_space['RCP_NM'] == recipe_row['RCP_NM']]
         if len(matching_recipe_in_no_space_df) > 0:
             rcp_nm_to_display= matching_recipe_in_no_space_df.iloc[0]['RCP_NM']
         else:
             rcp_nm_to_display= recipe_row['RCP_NM']
-
         recipe_scores.append((rcp_nm_to_display ,score))
 
     # 예측 점수가 높은 순으로 정렬합니다.
