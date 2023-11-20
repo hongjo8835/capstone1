@@ -23,6 +23,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+
+
 # router = routers.SimpleRouter()
 # router.register('boards', views.BoardViewset)
 

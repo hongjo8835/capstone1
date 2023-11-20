@@ -40,11 +40,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
-    date = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
 
     class Meta:
         model = Board
         fields = ['id', 'title', 'user', 'content', 'date', 'comments']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['date'] = instance.date.strftime('%Y-%m-%d %H:%M:%S')
+        return representation
 
 
 class FoodListSerializer(serializers.ModelSerializer):

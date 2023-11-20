@@ -75,7 +75,7 @@ def get_post(request, board_id):
         # 게시글 시리얼라이징
         serializer = BoardSerializer(post)
 
-        # JSON 응답 반환
+          # JSON 응답 반환
         return JsonResponse(serializer.data)
 
     except Board.DoesNotExist:
